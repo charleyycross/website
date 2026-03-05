@@ -3,25 +3,27 @@ import React, { useRef, useState } from 'react';
 interface DesktopIconProps {
   id: string;
   label: string;
-  icon: string;
+  iconSrc: string;
   position: { x: number, y: number };
   onClick: () => void;
   onDragStart: () => void;
   onDragEnd: (id: string, position: { x: number, y: number }) => void;
   onPositionChange: (id: string, position: { x: number, y: number }) => void;
   isDragging?: boolean;
+  isSelected?: boolean;
 }
 
 const DesktopIcon: React.FC<DesktopIconProps> = ({
   id,
   label,
-  icon,
+  iconSrc,
   position,
   onClick,
   onDragStart,
   onDragEnd,
   onPositionChange,
-  isDragging = false
+  isDragging = false,
+  isSelected = false
 }) => {
   const iconRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -74,16 +76,23 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    if (dragging) {
-      if (iconRef.current) {
-        iconRef.current.releasePointerCapture(e.pointerId);
-      }
-      
-      setDragging(false);
-      document.body.classList.remove('no-select');
-      
+    // Always release pointer capture and reset dragging state
+    if (iconRef.current && e.pointerId) {
+      iconRef.current.releasePointerCapture(e.pointerId);
+    }
+    
+    const wasDragging = dragging;
+    const didMove = hasMovedBeyondThreshold;
+    
+    // Reset all drag-related states
+    setDragging(false);
+    setHasMovedBeyondThreshold(false);
+    document.body.classList.remove('no-select');
+    
+    // Only process click/drag if we were actually dragging
+    if (wasDragging) {
       // If moved beyond threshold, finish drag; otherwise treat as click
-      if (hasMovedBeyondThreshold) {
+      if (didMove) {
         onDragEnd(id, position);
       } else {
         onClick();
@@ -94,7 +103,7 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
   return (
     <div
       ref={iconRef}
-      className={`desktop-icon ${dragging || isDragging ? 'dragging' : ''}`}
+      className={`desktop-icon ${dragging || isDragging ? 'dragging' : ''} ${isSelected ? 'selected' : ''}`}
       style={{
         position: 'absolute',
         left: `${position.x}px`,
@@ -105,8 +114,13 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
-      <div className="icon">
-        <span className="icon-emoji">{icon}</span>
+      <div className="icon-container">
+        <img
+          src={iconSrc}
+          alt={label}
+          draggable={false}
+          className="icon-image"
+        />
       </div>
       <div className="icon-label">{label}</div>
     </div>

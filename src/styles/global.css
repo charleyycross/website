@@ -308,12 +308,19 @@ button:focus {
 
 .start-menu-item-icon {
   margin-right: var(--spacing-md);
-  font-size: 16px;
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.start-menu-item-icon.emoji {
+  font-size: 20px;
+  width: auto;
+  height: auto;
 }
 
 .start-menu-divider {
@@ -342,21 +349,33 @@ button:focus {
   z-index: 1;
 }
 
-.desktop-icon:hover .icon:not(.dragging) {
-  transform: scale(1.1);
-}
-
-.desktop-icon:active .icon:not(.dragging) {
-  transform: scale(0.9);
+/* Removed hover brightness effect as requested */
+.desktop-icon:active .icon-container:not(.dragging) {
+  /* Keeping active state but without brightness change */
 }
 
 .desktop-icon.dragging {
   z-index: 10;
 }
 
-.desktop-icon.dragging .icon {
-  transform: scale(1.05);
+.desktop-icon.dragging .icon-container {
   opacity: 0.8;
+}
+
+/* Ensure icons return to normal state when not dragging */
+.desktop-icon:not(.dragging) .icon-container {
+  opacity: 1;
+  filter: none;
+}
+
+.icon-image {
+  width: 64px;
+  height: 64px;
+  display: block;
+  margin: 0 auto;
+  user-select: none;
+  image-rendering: pixelated;
+  object-fit: contain;
 }
 
 /* Prevent text selection during drag */
@@ -364,18 +383,34 @@ button:focus {
   user-select: none;
 }
 
-.icon {
+.icon-container {
   width: 64px;
   height: 64px;
-  background-color: var(--primary);
-  border: 2px solid var(--primary-dark);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--spacing-xs);
-  box-shadow: var(--shadow-pixel);
-  transition: transform 0.1s ease;
+  margin-bottom: 2px; /* Reduced from var(--spacing-xs) which is 4px */
+  transition: filter 0.2s ease;
   font-size: 24px;
+  position: relative;
+}
+
+
+/* Selection highlight styling */
+.desktop-icon.selected .icon-container {
+  position: relative;
+}
+
+.desktop-icon.selected .icon-container::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background-color: rgba(0, 120, 215, 0.4);
+  border: 1px solid rgba(0, 120, 215, 0.8);
+  z-index: -1;
 }
 
 .icon-label {
@@ -385,6 +420,8 @@ button:focus {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding: 2px 4px;
+  border-radius: 2px;
 }
 
 /* Boot Screen styles */

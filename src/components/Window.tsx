@@ -3,9 +3,10 @@ import { useWindowStore, type WindowState } from '../state/windowStore';
 
 interface WindowProps {
   window: WindowState;
+  onClose?: () => void;
 }
 
-const Window = ({ window }: WindowProps) => {
+const Window = ({ window, onClose }: WindowProps) => {
   const { closeWindow, focusWindow, moveWindow } = useWindowStore();
   const windowRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ isDragging: boolean; startX: number; startY: number }>({
@@ -23,6 +24,10 @@ const Window = ({ window }: WindowProps) => {
   const handleCloseClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     closeWindow(window.id);
+    // Call the onClose callback if provided
+    if (onClose) {
+      onClose();
+    }
   };
   
   // Handle window minimize

@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { useWindowStore } from '../state/windowStore';
 import type { WindowType } from '../state/windowStore';
+import { iconMap } from '../constants/iconMap';
 
 interface StartMenuProps {
   isOpen: boolean;
@@ -13,7 +14,8 @@ interface StartMenuProps {
 interface MenuItem {
   id: string;
   label: string;
-  icon: string;
+  iconKey?: string;
+  icon?: string;
   type?: WindowType;
   action?: () => void;
   divider?: boolean;
@@ -59,29 +61,29 @@ const StartMenu = ({ isOpen, onClose, onSoundToggle, isSoundEnabled, onReboot }:
   // Define menu items
   const menuItems: MenuItem[] = [
     // Apps section
-    { id: 'cv', label: 'CV', icon: '📄', type: 'cv' },
-    { id: 'projects', label: 'Projects', icon: '🚀', type: 'projects' },
-    { id: 'about', label: 'About', icon: '👋', type: 'about' },
-    { id: 'contact', label: 'Contact', icon: '📧', type: 'contact' },
-    { id: 'trash', label: 'Trash', icon: '🗑️', type: 'trash' },
-    { id: 'divider-1', divider: true, label: '', icon: '' },
+    { id: 'cv', label: 'CV', iconKey: 'cv', type: 'cv' },
+    { id: 'projects', label: 'Projects', iconKey: 'projects', type: 'projects' },
+    { id: 'about', label: 'About', iconKey: 'about', type: 'about' },
+    { id: 'contact', label: 'Contact', iconKey: 'contact', type: 'contact' },
+    { id: 'trash', label: 'Trash', iconKey: 'trash', type: 'trash' },
+    { id: 'divider-1', divider: true, label: '', iconKey: '' },
     
     // OS section
     { id: 'about-os', label: 'About CharleyOS', icon: '💻', type: 'system' },
     { id: 'divider-2', divider: true, label: '', icon: '' },
     
     // System section
-    { 
-      id: 'sound-toggle', 
-      label: `Sound: ${isSoundEnabled ? 'On' : 'Off'}`, 
+    {
+      id: 'sound-toggle',
+      label: `Sound: ${isSoundEnabled ? 'On' : 'Off'}`,
       icon: isSoundEnabled ? '🔊' : '🔇',
-      action: onSoundToggle 
+      action: onSoundToggle
     },
-    { 
-      id: 'reboot', 
-      label: 'Reboot System', 
+    {
+      id: 'reboot',
+      label: 'Reboot System',
       icon: '🔄',
-      action: onReboot 
+      action: onReboot
     },
   ];
   
@@ -113,7 +115,17 @@ const StartMenu = ({ isOpen, onClose, onSoundToggle, isSoundEnabled, onReboot }:
             className="start-menu-item"
             onClick={() => handleMenuItemClick(item)}
           >
-            <span className="start-menu-item-icon">{item.icon}</span>
+            {!item.divider && item.iconKey && (
+              <img
+                src={iconMap[item.iconKey as keyof typeof iconMap]}
+                alt={item.label}
+                className="start-menu-item-icon"
+                draggable={false}
+              />
+            )}
+            {!item.divider && item.icon && (
+              <span className="start-menu-item-icon emoji">{item.icon}</span>
+            )}
             <span className="start-menu-item-label">{item.label}</span>
           </button>
         )

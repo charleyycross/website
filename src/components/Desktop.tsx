@@ -4,12 +4,13 @@ import TopBar from './TopBar';
 import Taskbar from './Taskbar';
 import DesktopIcon from './DesktopIcon';
 import Window from './Window';
+import { iconMap } from '../constants/iconMap';
 
 interface DesktopIconData {
   id: string;
   type: WindowType;
   label: string;
-  icon: string;
+  iconKey: string;
   position: { x: number, y: number };
 }
 
@@ -26,6 +27,8 @@ const Desktop = ({ isSoundEnabled, onSoundToggle, onReboot }: DesktopProps) => {
   const [desktopBounds, setDesktopBounds] = useState({ width: 0, height: 0 });
   // Track which icon is being dragged (for visual styling)
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  // Track which icon is selected
+  const [selectedIconId, setSelectedIconId] = useState<string | null>(null);
   
   // Initialize icons with default positions
   const [icons, setIcons] = useState<DesktopIconData[]>(() => {
@@ -39,11 +42,11 @@ const Desktop = ({ isSoundEnabled, onSoundToggle, onReboot }: DesktopProps) => {
     ];
     
     return [
-      { id: 'cv', type: 'cv', label: 'CV', icon: '📄', position: defaultPositions[0] },
-      { id: 'projects', type: 'projects', label: 'Projects', icon: '🚀', position: defaultPositions[1] },
-      { id: 'about', type: 'about', label: 'About', icon: '👋', position: defaultPositions[2] },
-      { id: 'contact', type: 'contact', label: 'Contact', icon: '📧', position: defaultPositions[3] },
-      { id: 'trash', type: 'trash', label: 'Trash', icon: '🗑️', position: defaultPositions[4] },
+      { id: 'cv', type: 'cv', label: 'CV', iconKey: 'cv', position: defaultPositions[0] },
+      { id: 'projects', type: 'projects', label: 'Projects', iconKey: 'projects', position: defaultPositions[1] },
+      { id: 'about', type: 'about', label: 'About', iconKey: 'about', position: defaultPositions[2] },
+      { id: 'contact', type: 'contact', label: 'Contact', iconKey: 'contact', position: defaultPositions[3] },
+      { id: 'trash', type: 'trash', label: 'Trash', iconKey: 'trash', position: defaultPositions[4] },
     ];
   });
   
@@ -88,7 +91,16 @@ const Desktop = ({ isSoundEnabled, onSoundToggle, onReboot }: DesktopProps) => {
     return () => window.removeEventListener('resize', updateBounds);
   }, []);
   
-  const handleIconClick = (type: WindowType, label: string) => {
+  // Function to clear icon selection and drag state
+  const clearIconSelection = () => {
+    setSelectedIconId(null);
+    setActiveDragId(null); // Also clear any drag state
+  };
+  
+  const handleIconClick = (id: string, type: WindowType, label: string) => {
+    // Set the selected icon
+    setSelectedIconId(id);
+    // Open the window
     openWindow(type, label);
   };
   
@@ -135,8 +147,16 @@ const Desktop = ({ isSoundEnabled, onSoundToggle, onReboot }: DesktopProps) => {
     };
   };
   
+  // Clear selection when clicking on desktop background
+  const handleDesktopClick = (e: React.MouseEvent) => {
+    // Only clear if clicking directly on the desktop, not on icons or windows
+    if (e.target === e.currentTarget) {
+      setSelectedIconId(null);
+    }
+  };
+
   return (
-    <div className="desktop" ref={desktopRef}>
+    <div className="desktop" ref={desktopRef} onClick={handleDesktopClick}>
       <TopBar isSoundEnabled={isSoundEnabled} />
       
       <div className="desktop-icons-container">
@@ -145,14 +165,16 @@ const Desktop = ({ isSoundEnabled, onSoundToggle, onReboot }: DesktopProps) => {
             key={icon.id}
             id={icon.id}
             label={icon.label}
-            icon={icon.icon}
+            iconSrc={iconMap[icon.iconKey as keyof typeof iconMap]}
             position={icon.position}
-            onClick={() => handleIconClick(icon.type, icon.label)}
+            onClick={() => handleIconClick(icon.id, icon.type, icon.label)}
             onDragStart={() => handleDragStart(icon.id)}
             onDragEnd={handleDragEnd}
             onPositionChange={handlePositionChange}
             // Pass whether this icon is currently being dragged
             isDragging={activeDragId === icon.id}
+            // Pass whether this icon is selected
+            isSelected={selectedIconId === icon.id}
           />
         ))}
       </div>
@@ -161,6 +183,7 @@ const Desktop = ({ isSoundEnabled, onSoundToggle, onReboot }: DesktopProps) => {
         <Window
           key={window.id}
           window={window}
+          onClose={clearIconSelection}
         />
       ))}
       
